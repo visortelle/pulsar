@@ -97,6 +97,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         final String topicName3 = "persistent://my-property/my-ns/topic-3-" + key;
         final String topicName4 = "non-persistent://my-property/my-ns/topic-4-" + key;
         List<String> topicNames = Lists.newArrayList(topicName1, topicName2, topicName3, topicName4);
+
         final String patternString = "persistent://my-property/my-ns/pattern-topic.*";
         Pattern pattern = Pattern.compile(patternString);
 
@@ -178,10 +179,12 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     public void testBinaryProtoToGetTopicsOfNamespacePersistent() throws Exception {
         String key = "BinaryProtoToGetTopics";
         String subscriptionName = "my-ex-subscription-" + key;
+
         String topicName1 = "persistent://my-property/my-ns/pattern-topic-1-" + key;
         String topicName2 = "persistent://my-property/my-ns/pattern-topic-2-" + key;
         String topicName3 = "persistent://my-property/my-ns/pattern-topic-3-" + key;
         String topicName4 = "non-persistent://my-property/my-ns/pattern-topic-4-" + key;
+
         Pattern pattern = Pattern.compile("my-property/my-ns/pattern-topic.*");
 
         // 1. create partition
@@ -191,9 +194,6 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         admin.topics().createPartitionedTopic(topicName3, 3);
 
         // 2. create producer
-        String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 30;
-
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -244,11 +244,14 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().forEach(topic -> log.debug("getTopics topic: {}", topic));
 
         // 5. produce data
+        String messagePrefix = "my-message-" + key + "-";
+        int totalMessages = 30;
+
         for (int i = 0; i < totalMessages / 3; i++) {
-            producer1.send((messagePredicate + "producer1-" + i).getBytes());
-            producer2.send((messagePredicate + "producer2-" + i).getBytes());
-            producer3.send((messagePredicate + "producer3-" + i).getBytes());
-            producer4.send((messagePredicate + "producer4-" + i).getBytes());
+            producer1.send((messagePrefix + "producer1-" + i).getBytes());
+            producer2.send((messagePrefix + "producer2-" + i).getBytes());
+            producer3.send((messagePrefix + "producer3-" + i).getBytes());
+            producer4.send((messagePrefix + "producer4-" + i).getBytes());
         }
 
         // 6. should receive all the message
@@ -358,9 +361,6 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         admin.topics().createPartitionedTopic(topicName3, 3);
 
         // 2. create producer
-        String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 40;
-
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -410,11 +410,14 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().forEach(topic -> log.debug("getTopics topic: {}", topic));
 
         // 5. produce data
+        String messagePrefix = "my-message-" + key + "-";
+        int totalMessages = 40;
+
         for (int i = 0; i < totalMessages / 4; i++) {
-            producer1.send((messagePredicate + "producer1-" + i).getBytes());
-            producer2.send((messagePredicate + "producer2-" + i).getBytes());
-            producer3.send((messagePredicate + "producer3-" + i).getBytes());
-            producer4.send((messagePredicate + "producer4-" + i).getBytes());
+            producer1.send((messagePrefix + "producer1-" + i).getBytes());
+            producer2.send((messagePrefix + "producer2-" + i).getBytes());
+            producer3.send((messagePrefix + "producer3-" + i).getBytes());
+            producer4.send((messagePrefix + "producer4-" + i).getBytes());
         }
 
         // 6. should receive all the message
@@ -442,10 +445,12 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     public void testBinaryProtoToGetTopicsOfNamespaceAll() throws Exception {
         String key = "BinaryProtoToGetTopics";
         String subscriptionName = "my-ex-subscription-" + key;
+
         String topicName1 = "persistent://my-property/my-ns/pattern-topic-1-" + key;
         String topicName2 = "persistent://my-property/my-ns/pattern-topic-2-" + key;
         String topicName3 = "persistent://my-property/my-ns/pattern-topic-3-" + key;
         String topicName4 = "non-persistent://my-property/my-ns/pattern-topic-4-" + key;
+
         Pattern pattern = Pattern.compile("my-property/my-ns/pattern-topic.*");
 
         // 1. create partition
@@ -455,9 +460,6 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         admin.topics().createPartitionedTopic(topicName3, 3);
 
         // 2. create producer
-        String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 40;
-
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -507,6 +509,9 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().forEach(topic -> log.debug("getTopics topic: {}", topic));
 
         // 5. produce data
+        String messagePredicate = "my-message-" + key + "-";
+        int totalMessages = 40;
+
         for (int i = 0; i < totalMessages / 4; i++) {
             producer1.send((messagePredicate + "producer1-" + i).getBytes());
             producer2.send((messagePredicate + "producer2-" + i).getBytes());
@@ -539,9 +544,11 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     public void testStartEmptyPatternConsumer() throws Exception {
         String key = "StartEmptyPatternConsumerTest";
         String subscriptionName = "my-ex-subscription-" + key;
+
         String topicName1 = "persistent://my-property/my-ns/pattern-topic-1-" + key;
         String topicName2 = "persistent://my-property/my-ns/pattern-topic-2-" + key;
         String topicName3 = "persistent://my-property/my-ns/pattern-topic-3-" + key;
+
         Pattern pattern = Pattern.compile("persistent://my-property/my-ns/pattern-topic.*");
 
         // 1. create partition
@@ -572,9 +579,6 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         assertEquals(((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().size(), 2);
 
         // 4. create producer
-        String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 30;
-
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -601,12 +605,14 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             assertEquals(((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().size(), 2);
         });
 
-
         // 7. produce data
+        String messagePrefix = "my-message-" + key + "-";
+        int totalMessages = 30;
+
         for (int i = 0; i < totalMessages / 3; i++) {
-            producer1.send((messagePredicate + "producer1-" + i).getBytes());
-            producer2.send((messagePredicate + "producer2-" + i).getBytes());
-            producer3.send((messagePredicate + "producer3-" + i).getBytes());
+            producer1.send((messagePrefix + "producer1-" + i).getBytes());
+            producer2.send((messagePrefix + "producer2-" + i).getBytes());
+            producer3.send((messagePrefix + "producer3-" + i).getBytes());
         }
 
         // 8. should receive all the message
@@ -637,7 +643,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     }
 
     @Test(timeOut = testTimeout, dataProvider = "delayTypesOfWatchingTopics")
-    public void testAutoSubscribePatterConsumerFromBrokerWatcher(boolean delayWatchingTopics) throws Exception {
+    public void testAutoSubscribePatternConsumerFromBrokerWatcher(boolean delayWatchingTopics) throws Exception {
         final String key = "AutoSubscribePatternConsumer";
         final String subscriptionName = "my-ex-subscription-" + key;
         final Pattern pattern = Pattern.compile("persistent://my-property/my-ns/pattern-topic.*");
@@ -849,9 +855,6 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         admin.topics().createPartitionedTopic(topicName3, 3);
 
         // 2. create producer
-        String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 30;
-
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -889,10 +892,13 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         assertEquals(((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().size(), 2);
 
         // 5. produce data to topic 1,2,3; verify should receive all the message
+        String messagePrefix = "my-message-" + key + "-";
+        int totalMessages = 30;
+
         for (int i = 0; i < totalMessages / 3; i++) {
-            producer1.send((messagePredicate + "producer1-" + i).getBytes());
-            producer2.send((messagePredicate + "producer2-" + i).getBytes());
-            producer3.send((messagePredicate + "producer3-" + i).getBytes());
+            producer1.send((messagePrefix + "producer1-" + i).getBytes());
+            producer2.send((messagePrefix + "producer2-" + i).getBytes());
+            producer3.send((messagePrefix + "producer3-" + i).getBytes());
         }
 
         int messageSet = 0;
@@ -926,8 +932,8 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 8. produce data to topic3 and topic4, verify should receive all the message
         for (int i = 0; i < totalMessages / 2; i++) {
-            producer3.send((messagePredicate + "round2-producer4-" + i).getBytes());
-            producer4.send((messagePredicate + "round2-producer4-" + i).getBytes());
+            producer3.send((messagePrefix + "round2-producer4-" + i).getBytes());
+            producer4.send((messagePrefix + "round2-producer4-" + i).getBytes());
         }
 
         messageSet = 0;
@@ -953,9 +959,11 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     public void testAutoUnsubscribePatternConsumer() throws Exception {
         String key = "AutoUnsubscribePatternConsumer";
         String subscriptionName = "my-ex-subscription-" + key;
+
         String topicName1 = "persistent://my-property/my-ns/pattern-topic-1-" + key;
         String topicName2 = "persistent://my-property/my-ns/pattern-topic-2-" + key;
         String topicName3 = "persistent://my-property/my-ns/pattern-topic-3-" + key;
+
         Pattern pattern = Pattern.compile("persistent://my-property/my-ns/pattern-topic.*");
 
         // 1. create partition
@@ -965,9 +973,6 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         admin.topics().createPartitionedTopic(topicName3, 3);
 
         // 2. create producer
-        String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 30;
-
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
             .enableBatching(false)
             .messageRoutingMode(MessageRoutingMode.SinglePartition)
@@ -1005,10 +1010,13 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         assertEquals(((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().size(), 2);
 
         // 5. produce data to topic 1,2,3; verify should receive all the message
+        String messagePrefix = "my-message-" + key + "-";
+        int totalMessages = 30;
+
         for (int i = 0; i < totalMessages / 3; i++) {
-            producer1.send((messagePredicate + "producer1-" + i).getBytes());
-            producer2.send((messagePredicate + "producer2-" + i).getBytes());
-            producer3.send((messagePredicate + "producer3-" + i).getBytes());
+            producer1.send((messagePrefix + "producer1-" + i).getBytes());
+            producer2.send((messagePrefix + "producer2-" + i).getBytes());
+            producer3.send((messagePrefix + "producer3-" + i).getBytes());
         }
 
         int messageSet = 0;
@@ -1042,7 +1050,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 8. produce data to topic2, verify should receive all the message
         for (int i = 0; i < totalMessages; i++) {
-            producer2.send((messagePredicate + "round2-producer2-" + i).getBytes());
+            producer2.send((messagePrefix + "round2-producer2-" + i).getBytes());
         }
 
         messageSet = 0;
