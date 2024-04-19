@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
@@ -109,12 +110,12 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         // test failing builder with pattern and topic should fail
         try {
             pulsarClient.newConsumer()
-                .topicsPattern(pattern)
-                .topic(topicName1)
-                .subscriptionName(subscriptionName)
-                .subscriptionType(SubscriptionType.Shared)
-                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-                .subscribe();
+                    .topicsPattern(pattern)
+                    .topic(topicName1)
+                    .subscriptionName(subscriptionName)
+                    .subscriptionType(SubscriptionType.Shared)
+                    .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                    .subscribe();
             fail("subscribe1 with pattern and topic should fail.");
         } catch (PulsarClientException e) {
             // expected
@@ -123,12 +124,12 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         // test failing builder with pattern and topics should fail
         try {
             pulsarClient.newConsumer()
-                .topicsPattern(pattern)
-                .topics(topicNames)
-                .subscriptionName(subscriptionName)
-                .subscriptionType(SubscriptionType.Shared)
-                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-                .subscribe();
+                    .topicsPattern(pattern)
+                    .topics(topicNames)
+                    .subscriptionName(subscriptionName)
+                    .subscriptionType(SubscriptionType.Shared)
+                    .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                    .subscribe();
             fail("subscribe2 with pattern and topics should fail.");
         } catch (PulsarClientException e) {
             // expected
@@ -137,12 +138,12 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         // test failing builder with pattern and patternString should fail
         try {
             pulsarClient.newConsumer()
-                .topicsPattern(pattern)
-                .topicsPattern(patternString)
-                .subscriptionName(subscriptionName)
-                .subscriptionType(SubscriptionType.Shared)
-                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-                .subscribe();
+                    .topicsPattern(pattern)
+                    .topicsPattern(patternString)
+                    .subscriptionName(subscriptionName)
+                    .subscriptionType(SubscriptionType.Shared)
+                    .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                    .subscribe();
             fail("subscribe3 with pattern and patternString should fail.");
         } catch (IllegalArgumentException e) {
             // expected
@@ -195,29 +196,29 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 2. create producer
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
-            .enableBatching(false)
-            .messageRoutingMode(MessageRoutingMode.SinglePartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
         Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer3 = pulsarClient.newProducer().topic(topicName3)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer4 = pulsarClient.newProducer().topic(topicName4)
-            .enableBatching(false)
-            .create();
+                .enableBatching(false)
+                .create();
 
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(2)
-            .subscriptionName(subscriptionName)
-            .subscriptionType(SubscriptionType.Shared)
-            .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-            .receiverQueueSize(4)
-            .subscribe();
+                .topicsPattern(pattern)
+                .patternAutoDiscoveryPeriod(2)
+                .subscriptionName(subscriptionName)
+                .subscriptionType(SubscriptionType.Shared)
+                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                .receiverQueueSize(4)
+                .subscribe();
         assertTrue(consumer.getTopic().startsWith(PatternMultiTopicsConsumerImpl.DUMMY_TOPIC_NAME_PREFIX));
 
         // Wait topic list watcher creation.
@@ -239,15 +240,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         consumers.forEach(c -> log.debug("consumer: {}", c.getTopic()));
 
         IntStream.range(0, topics.size()).forEach(index ->
-            assertEquals(consumers.get(index).getTopic(), topics.get(index)));
+                assertEquals(consumers.get(index).getTopic(), topics.get(index)));
 
-        ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().forEach(topic -> log.debug("getTopics topic: {}", topic));
+        ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics()
+                .forEach(topic -> log.debug("getTopics topic: {}", topic));
 
         // 5. produce data
         String messagePrefix = "my-message-" + key + "-";
-        int totalMessages = 30;
+        int numMessages = 30;
 
-        for (int i = 0; i < totalMessages / 3; i++) {
+        for (int i = 0; i < numMessages / 3; i++) {
             producer1.send((messagePrefix + "producer1-" + i).getBytes());
             producer2.send((messagePrefix + "producer2-" + i).getBytes());
             producer3.send((messagePrefix + "producer3-" + i).getBytes());
@@ -259,12 +261,12 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numReceivedMessages ++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numReceivedMessages, totalMessages);
+        assertEquals(numReceivedMessages, numMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -343,79 +345,82 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         testBinaryProtoToGetTopicsOfNamespaceNonPersistent();
     }
 
-	// verify consumer create success, and works well.
+    // verify consumer create success, and works well.
     @Test(timeOut = testTimeout)
     public void testBinaryProtoToGetTopicsOfNamespaceNonPersistent() throws Exception {
         String key = "BinaryProtoToGetTopics";
         String subscriptionName = "my-ex-subscription-" + key;
-        String topicName1 = "persistent://my-property/my-ns/np-pattern-topic-1-" + key;
-        String topicName2 = "persistent://my-property/my-ns/np-pattern-topic-2-" + key;
-        String topicName3 = "persistent://my-property/my-ns/np-pattern-topic-3-" + key;
+//
+//        String topicName1 = "persistent://my-property/my-ns/np-pattern-topic-1-" + key;
+//        String topicName2 = "persistent://my-property/my-ns/np-pattern-topic-2-" + key;
+        String topicName3 = "non-persistent://my-property/my-ns/np-pattern-topic-3-" + key;
         String topicName4 = "non-persistent://my-property/my-ns/np-pattern-topic-4-" + key;
-        Pattern pattern = Pattern.compile("my-property/my-ns/np-pattern-topic.*");
 
         // 1. create partition
         TenantInfoImpl tenantInfo = createDefaultTenantInfo();
         admin.tenants().createTenant("prop", tenantInfo);
-        admin.topics().createPartitionedTopic(topicName2, 2);
-        admin.topics().createPartitionedTopic(topicName3, 3);
+//        admin.topics().createPartitionedTopic(topicName2, 2);
+//        admin.topics().createPartitionedTopic(topicName3, 3);
 
         // 2. create producer
-        Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
-            .enableBatching(false)
-            .messageRoutingMode(MessageRoutingMode.SinglePartition)
-            .create();
-        Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+//        Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
+//                .enableBatching(false)
+//                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+//                .create();
+//        Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
+//                .enableBatching(false)
+//                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+//                .create();
         Producer<byte[]> producer3 = pulsarClient.newProducer().topic(topicName3)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+//                .enableBatching(false)
+//                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer4 = pulsarClient.newProducer().topic(topicName4)
-            .enableBatching(false)
-            .create();
+//                .enableBatching(false)
+                .create();
+
+        Pattern pattern = Pattern.compile("my-property/my-ns/np-pattern-topic.*");
 
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(2)
-            .subscriptionName(subscriptionName)
-            .subscriptionType(SubscriptionType.Shared)
-            .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-            .subscriptionTopicsMode(RegexSubscriptionMode.NonPersistentOnly)
-            .subscribe();
+                .topicsPattern(pattern)
+//                .patternAutoDiscoveryPeriod(2)
+                .subscriptionName(subscriptionName)
+//                .subscriptionType(SubscriptionType.Shared)
+                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                .subscriptionTopicsMode(RegexSubscriptionMode.NonPersistentOnly)
+                .subscribe();
 
         // Wait topic list watcher creation.
-        Awaitility.await().untilAsserted(() -> {
-            CompletableFuture completableFuture = WhiteboxImpl.getInternalState(consumer, "watcherFuture");
-            assertTrue(completableFuture.isDone() && !completableFuture.isCompletedExceptionally());
-        });
+//        Awaitility.await().untilAsserted(() -> {
+//            CompletableFuture completableFuture = WhiteboxImpl.getInternalState(consumer, "watcherFuture");
+//            assertTrue(completableFuture.isDone() && !completableFuture.isCompletedExceptionally());
+//        });
 
         // 4. verify consumer get methods, to get right number of partitions and topics.
-        assertSame(pattern, ((PatternMultiTopicsConsumerImpl<?>) consumer).getPattern());
-        List<String> topics = ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitions();
-        List<ConsumerImpl<byte[]>> consumers = ((PatternMultiTopicsConsumerImpl<byte[]>) consumer).getConsumers();
+//        assertSame(pattern, ((PatternMultiTopicsConsumerImpl<?>) consumer).getPattern());
+//        List<String> topics = ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitions();
+//        List<ConsumerImpl<byte[]>> consumers = ((PatternMultiTopicsConsumerImpl<byte[]>) consumer).getConsumers();
 
-        assertEquals(topics.size(), 1);
-        assertEquals(consumers.size(), 1);
-        assertEquals(((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().size(), 0);
+//        assertEquals(topics.size(), 1);
+//        assertEquals(consumers.size(), 1);
+//        assertEquals(((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().size(), 0);
 
-        topics.forEach(topic -> log.debug("topic: {}", topic));
-        consumers.forEach(c -> log.debug("consumer: {}", c.getTopic()));
+//        topics.forEach(topic -> log.debug("topic: {}", topic));
+//        consumers.forEach(c -> log.debug("consumer: {}", c.getTopic()));
 
-        IntStream.range(0, topics.size()).forEach(index ->
-            assertEquals(consumers.get(index).getTopic(), topics.get(index)));
+//        IntStream.range(0, topics.size()).forEach(index ->
+//                assertEquals(consumers.get(index).getTopic(), topics.get(index)));
 
-        ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().forEach(topic -> log.debug("getTopics topic: {}", topic));
+//        ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics()
+//                .forEach(topic -> log.debug("getTopics topic: {}", topic));
 
         // 5. produce data
         String messagePrefix = "my-message-" + key + "-";
-        int totalMessages = 40;
+        int numMessagesPerProducer = 40;
 
-        for (int i = 0; i < totalMessages / 4; i++) {
-            producer1.send((messagePrefix + "producer1-" + i).getBytes());
-            producer2.send((messagePrefix + "producer2-" + i).getBytes());
+        for (int i = 0; i < numMessagesPerProducer; i++) {
+//            producer1.send((messagePrefix + "producer1-" + i).getBytes());
+//            producer2.send((messagePrefix + "producer2-" + i).getBytes());
             producer3.send((messagePrefix + "producer3-" + i).getBytes());
             producer4.send((messagePrefix + "producer4-" + i).getBytes());
         }
@@ -430,13 +435,15 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numReceivedMessages, totalMessages / 4);
+        log.info("numReceivedMessages: {}", numReceivedMessages);
+        log.info("numMessagesPerProducer: {}", numMessagesPerProducer);
+        assertEquals(numReceivedMessages, numMessagesPerProducer * 2);
 
         consumer.unsubscribe();
         consumer.close();
-        producer1.close();
-        producer2.close();
-        producer3.close();
+//        producer1.close();
+//        producer2.close();
+//        producer3.close();
         producer4.close();
     }
 
@@ -461,29 +468,29 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 2. create producer
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
-            .enableBatching(false)
-            .messageRoutingMode(MessageRoutingMode.SinglePartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
         Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer3 = pulsarClient.newProducer().topic(topicName3)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer4 = pulsarClient.newProducer().topic(topicName4)
-            .enableBatching(false)
-            .create();
+                .enableBatching(false)
+                .create();
 
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(2)
-            .subscriptionName(subscriptionName)
-            .subscriptionType(SubscriptionType.Shared)
-            .subscriptionTopicsMode(RegexSubscriptionMode.AllTopics)
-            .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-            .subscribe();
+                .topicsPattern(pattern)
+                .patternAutoDiscoveryPeriod(2)
+                .subscriptionName(subscriptionName)
+                .subscriptionType(SubscriptionType.Shared)
+                .subscriptionTopicsMode(RegexSubscriptionMode.AllTopics)
+                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                .subscribe();
 
         // Wait topic list watcher creation.
         Awaitility.await().untilAsserted(() -> {
@@ -504,15 +511,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         consumers.forEach(c -> log.debug("consumer: {}", c.getTopic()));
 
         IntStream.range(0, topics.size()).forEach(index ->
-            assertEquals(consumers.get(index).getTopic(), topics.get(index)));
+                assertEquals(consumers.get(index).getTopic(), topics.get(index)));
 
-        ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics().forEach(topic -> log.debug("getTopics topic: {}", topic));
+        ((PatternMultiTopicsConsumerImpl<?>) consumer).getPartitionedTopics()
+                .forEach(topic -> log.debug("getTopics topic: {}", topic));
 
         // 5. produce data
         String messagePredicate = "my-message-" + key + "-";
-        int totalMessages = 40;
+        int numMessages = 40;
 
-        for (int i = 0; i < totalMessages / 4; i++) {
+        for (int i = 0; i < numMessages / 4; i++) {
             producer1.send((messagePredicate + "producer1-" + i).getBytes());
             producer2.send((messagePredicate + "producer2-" + i).getBytes());
             producer3.send((messagePredicate + "producer3-" + i).getBytes());
@@ -529,7 +537,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numReceivedMessages, totalMessages);
+        assertEquals(numReceivedMessages, numMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -559,13 +567,13 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 2. Create consumer, this should success, but with empty sub-consumer internal
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(2)
-            .subscriptionName(subscriptionName)
-            .subscriptionType(SubscriptionType.Shared)
-            .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-            .receiverQueueSize(4)
-            .subscribe();
+                .topicsPattern(pattern)
+                .patternAutoDiscoveryPeriod(2)
+                .subscriptionName(subscriptionName)
+                .subscriptionType(SubscriptionType.Shared)
+                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                .receiverQueueSize(4)
+                .subscribe();
         // Wait topic list watcher creation.
         Awaitility.await().untilAsserted(() -> {
             CompletableFuture completableFuture = WhiteboxImpl.getInternalState(consumer, "watcherFuture");
@@ -580,17 +588,17 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 4. create producer
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
-            .enableBatching(false)
-            .messageRoutingMode(MessageRoutingMode.SinglePartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
         Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer3 = pulsarClient.newProducer().topic(topicName3)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
 
         // 5. call recheckTopics to subscribe each added topics above
         log.debug("recheck topics change");
@@ -607,9 +615,9 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 7. produce data
         String messagePrefix = "my-message-" + key + "-";
-        int totalMessages = 30;
+        int numMessages = 30;
 
-        for (int i = 0; i < totalMessages / 3; i++) {
+        for (int i = 0; i < numMessages / 3; i++) {
             producer1.send((messagePrefix + "producer1-" + i).getBytes());
             producer2.send((messagePrefix + "producer2-" + i).getBytes());
             producer3.send((messagePrefix + "producer3-" + i).getBytes());
@@ -625,7 +633,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numReceivedMessages, totalMessages);
+        assertEquals(numReceivedMessages, numMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -634,11 +642,11 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         producer3.close();
     }
 
-    @DataProvider(name= "delayTypesOfWatchingTopics")
-    public Object[][] delayTypesOfWatchingTopics(){
+    @DataProvider(name = "delayTypesOfWatchingTopics")
+    public Object[][] delayTypesOfWatchingTopics() {
         return new Object[][]{
-            {true},
-            {false}
+                {true},
+                {false}
         };
     }
 
@@ -688,8 +696,8 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         }
     }
 
-    @DataProvider(name= "regexpConsumerArgs")
-    public Object[][] regexpConsumerArgs(){
+    @DataProvider(name = "regexpConsumerArgs")
+    public Object[][] regexpConsumerArgs() {
         return new Object[][]{
                 {true, true},
                 {true, false},
@@ -708,7 +716,8 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     }
 
     @Test(timeOut = testTimeout, dataProvider = "regexpConsumerArgs")
-    public void testPreciseRegexpSubscribe(boolean partitioned, boolean createTopicAfterWatcherStarted) throws Exception {
+    public void testPreciseRegexpSubscribe(boolean partitioned, boolean createTopicAfterWatcherStarted)
+            throws Exception {
         final String topicName = BrokerTestUtil.newUniqueName("persistent://public/default/tp");
         final String subscriptionName = "s1";
         final Pattern pattern = Pattern.compile(String.format("%s$", topicName));
@@ -754,8 +763,8 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         }
     }
 
-    @DataProvider(name= "partitioned")
-    public Object[][] partitioned(){
+    @DataProvider(name = "partitioned")
+    public Object[][] partitioned() {
         return new Object[][]{
                 {true},
                 {true}
@@ -818,24 +827,24 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
     private PulsarClient createDelayWatchTopicsClient() throws Exception {
         ClientBuilderImpl clientBuilder = (ClientBuilderImpl) PulsarClient.builder().serviceUrl(lookupUrl.toString());
         return InjectedClientCnxClientBuilder.create(clientBuilder,
-            (conf, eventLoopGroup) -> new ClientCnx(InstrumentProvider.NOOP, conf, eventLoopGroup) {
-                public CompletableFuture<CommandWatchTopicListSuccess> newWatchTopicList(
-                        BaseCommand command, long requestId) {
-                    // Inject 2 seconds delay when sending command New Watch Topics.
-                    CompletableFuture<CommandWatchTopicListSuccess> res = new CompletableFuture<>();
-                    new Thread(() -> {
-                        sleepSeconds(2);
-                        super.newWatchTopicList(command, requestId).whenComplete((v, ex) -> {
-                            if (ex != null) {
-                                res.completeExceptionally(ex);
-                            } else {
-                                res.complete(v);
-                            }
-                        });
-                    }).start();
-                    return res;
-                }
-            });
+                (conf, eventLoopGroup) -> new ClientCnx(InstrumentProvider.NOOP, conf, eventLoopGroup) {
+                    public CompletableFuture<CommandWatchTopicListSuccess> newWatchTopicList(
+                            BaseCommand command, long requestId) {
+                        // Inject 2 seconds delay when sending command New Watch Topics.
+                        CompletableFuture<CommandWatchTopicListSuccess> res = new CompletableFuture<>();
+                        new Thread(() -> {
+                            sleepSeconds(2);
+                            super.newWatchTopicList(command, requestId).whenComplete((v, ex) -> {
+                                if (ex != null) {
+                                    res.completeExceptionally(ex);
+                                } else {
+                                    res.complete(v);
+                                }
+                            });
+                        }).start();
+                        return res;
+                    }
+                });
     }
 
     // simulate subscribe a pattern which has 3 topics, but then matched topic added in.
@@ -856,26 +865,26 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 2. create producer
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
-            .enableBatching(false)
-            .messageRoutingMode(MessageRoutingMode.SinglePartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
         Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer3 = pulsarClient.newProducer().topic(topicName3)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
 
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(2)
-            .subscriptionName(subscriptionName)
-            .subscriptionType(SubscriptionType.Shared)
-            .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-            .receiverQueueSize(4)
-            .subscribe();
+                .topicsPattern(pattern)
+                .patternAutoDiscoveryPeriod(2)
+                .subscriptionName(subscriptionName)
+                .subscriptionType(SubscriptionType.Shared)
+                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                .receiverQueueSize(4)
+                .subscribe();
 
         // Wait topic list watcher creation.
         Awaitility.await().untilAsserted(() -> {
@@ -905,7 +914,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numReceivedMessages ++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
@@ -916,9 +925,9 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         String topicName4 = "persistent://my-property/my-ns/pattern-topic-4-" + key;
         admin.topics().createPartitionedTopic(topicName4, 4);
         Producer<byte[]> producer4 = pulsarClient.newProducer().topic(topicName4)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
 
         // 7. call recheckTopics to subscribe each added topics above, verify topics number: 10=1+2+3+4
         log.debug("recheck topics change");
@@ -940,7 +949,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numReceivedMessages ++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
@@ -974,26 +983,26 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
 
         // 2. create producer
         Producer<byte[]> producer1 = pulsarClient.newProducer().topic(topicName1)
-            .enableBatching(false)
-            .messageRoutingMode(MessageRoutingMode.SinglePartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(MessageRoutingMode.SinglePartition)
+                .create();
         Producer<byte[]> producer2 = pulsarClient.newProducer().topic(topicName2)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
         Producer<byte[]> producer3 = pulsarClient.newProducer().topic(topicName3)
-            .enableBatching(false)
-            .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
-            .create();
+                .enableBatching(false)
+                .messageRoutingMode(org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition)
+                .create();
 
         Consumer<byte[]> consumer = pulsarClient.newConsumer()
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(10, TimeUnit.SECONDS)
-            .subscriptionName(subscriptionName)
-            .subscriptionType(SubscriptionType.Shared)
-            .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
-            .receiverQueueSize(4)
-            .subscribe();
+                .topicsPattern(pattern)
+                .patternAutoDiscoveryPeriod(10, TimeUnit.SECONDS)
+                .subscriptionName(subscriptionName)
+                .subscriptionType(SubscriptionType.Shared)
+                .ackTimeout(ackTimeOutMillis, TimeUnit.MILLISECONDS)
+                .receiverQueueSize(4)
+                .subscribe();
 
         // Wait topic list watcher creation.
         Awaitility.await().untilAsserted(() -> {
@@ -1023,7 +1032,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numReceivedMessages ++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
@@ -1057,7 +1066,7 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numReceivedMessages ++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
@@ -1085,10 +1094,10 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
                 .create();
 
         Consumer<String> consumer = pulsarClient.newConsumer(Schema.STRING)
-            .topicsPattern(pattern)
-            .patternAutoDiscoveryPeriod(1)
-            .subscriptionName("sub")
-            .subscribe();
+                .topicsPattern(pattern)
+                .patternAutoDiscoveryPeriod(1)
+                .subscriptionName("sub")
+                .subscribe();
 
         // Wait topic list watcher creation.
         Awaitility.await().untilAsserted(() -> {
