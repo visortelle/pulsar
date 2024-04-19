@@ -255,16 +255,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         }
 
         // 6. should receive all the message
-        int numMessagesReceived = 0;
+        int numReceivedMessages = 0;
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived ++;
+            numReceivedMessages ++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, totalMessages);
+        assertEquals(numReceivedMessages, totalMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -421,16 +421,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         }
 
         // 6. should receive all the message
-        int numMessagesReceived = 0;
+        int numReceivedMessages = 0;
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived ++;
+            numReceivedMessages ++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, totalMessages / 4);
+        assertEquals(numReceivedMessages, totalMessages / 4);
 
         consumer.unsubscribe();
         consumer.close();
@@ -520,16 +520,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         }
 
         // 6. should receive all the message
-        int numMessagesReceived = 0;
+        int numReceivedMessages = 0;
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, totalMessages);
+        assertEquals(numReceivedMessages, totalMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -616,16 +616,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
         }
 
         // 8. should receive all the message
-        int numMessagesReceived = 0;
+        int numReceivedMessages = 0;
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived++;
+            numReceivedMessages++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, totalMessages);
+        assertEquals(numReceivedMessages, totalMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -901,16 +901,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             producer3.send((messagePrefix + "producer3-" + i).getBytes());
         }
 
-        int numMessagesReceived = 0;
+        int numReceivedMessages = 0;
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived ++;
+            numReceivedMessages ++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, numMessages);
+        assertEquals(numReceivedMessages, numMessages);
 
         // 6. create another producer with 4 partitions
         String topicName4 = "persistent://my-property/my-ns/pattern-topic-4-" + key;
@@ -936,16 +936,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             producer4.send((messagePrefix + "round2-producer4-" + i).getBytes());
         }
 
-        numMessagesReceived = 0;
+        numReceivedMessages = 0;
         message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived ++;
+            numReceivedMessages ++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, numMessages);
+        assertEquals(numReceivedMessages, numMessages);
 
         consumer.unsubscribe();
         consumer.close();
@@ -1019,16 +1019,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             producer3.send((messagePrefix + "producer3-" + i).getBytes());
         }
 
-        int numMessagesReceived = 0;
+        int numReceivedMessages = 0;
         Message<byte[]> message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived ++;
+            numReceivedMessages ++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, totalMessages);
+        assertEquals(numReceivedMessages, totalMessages);
 
         // 6. remove producer 1,3; verify only consumer 2 left
         // seems no direct way to verify auto-unsubscribe, because this patternConsumer also referenced the topic.
@@ -1053,16 +1053,16 @@ public class PatternTopicsConsumerImplTest extends ProducerConsumerBase {
             producer2.send((messagePrefix + "round2-producer2-" + i).getBytes());
         }
 
-        numMessagesReceived = 0;
+        numReceivedMessages = 0;
         message = consumer.receive();
         do {
             assertTrue(message instanceof TopicMessageImpl);
-            numMessagesReceived ++;
+            numReceivedMessages ++;
             consumer.acknowledge(message);
             log.debug("Consumer acknowledged: " + new String(message.getData()));
             message = consumer.receive(500, TimeUnit.MILLISECONDS);
         } while (message != null);
-        assertEquals(numMessagesReceived, totalMessages);
+        assertEquals(numReceivedMessages, totalMessages);
 
         consumer.unsubscribe();
         consumer.close();
