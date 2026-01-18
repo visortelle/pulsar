@@ -1,3 +1,6 @@
+name: Document
+description: Suggest document changes
+title: "[Doc] "
 blank_issues_enabled: false
 contact_links:
   - name: Documentation Issue
